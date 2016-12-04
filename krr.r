@@ -15,7 +15,7 @@ library(DRR)
 
 
 # Fast Learner with noisySinc data with minimal variance:
-plotSigmaFast <- function(sigvals){
+plotSigmaFastsinc <- function(sigvals){
     #performance
     mse = c()
     time = c()
@@ -26,14 +26,15 @@ plotSigmaFast <- function(sigvals){
     png("sigmakernsfast.png")
     plot(ns)
 
-    for( sig in sigvals){ 
+    for(sig in sigvals){ 
         # fit KRR with RBF kernel using noisySinc toy data for each sigma in kernel
                 fast.krr = constructFastKRRLearner()
         fast.p = list(kernel="rbfdot", sigma = sig, 
                       lambda = .1/getN(ns), nblocks = 4)
-        append(time, system.time(fast.m <- fast.krr$learn(ns, fast.p)))
+        time <- c(time, as.numeric(system.time(fast.m 
+                <- fast.krr$learn(ns, fast.p))[3]))
         fast.pred <- fast.krr$predict(fast.m,nsTest)
-        append(mse, sum((fast.pred-nsTest$y)^2) / getN(nsTest))
+        mse = c(mse, sum((fast.pred-nsTest$y)^2) / getN(nsTest))
         # add lines an different colors for each sigma
         lines(sort(nsTest$x), fast.pred[order(nsTest$x)] , lty = 1) 
     }
@@ -42,7 +43,7 @@ plotSigmaFast <- function(sigvals){
 }
 
 # Regular Learner with noisySinc data with minimal variance:
-plotSigmaReg <- function(sigvals){
+plotSigmaRegsinc <- function(sigvals){
     #performance
     mse = c()
     time = c()
@@ -58,10 +59,10 @@ plotSigmaReg <- function(sigvals){
         krr = constructKRRLearner()
         p = list(kernel="rbfdot", sigma = sig, 
                       lambda = .1/getN(ns))
-        append(time, system.time(m <- krr$learn(ns, p)))
+        time <- c(time, as.numeric(system.time(fast.m 
+                <- fast.krr$learn(ns, fast.p))[3]))
         pred <- krr$predict(m,nsTest)
-        append(mse, sum((pred-nsTest$y)^2) / getN(nsTest))
-        print(sum((pred-nsTest$y)^2)/getN(nsTest))
+        mse = c(mse, sum((pred-nsTest$y)^2) / getN(nsTest))
         # add lines an different colors for each sigma
         lines(sort(nsTest$x), pred[order(nsTest$x)] , lty = 1) 
     }
@@ -69,9 +70,70 @@ plotSigmaReg <- function(sigvals){
     return(list("mse" = mse, "time"= time))
 }
 
-# Do the same above but with the donoho doppler data
+# Fast learner with Donoho data
+plotSigmaFastDon <- function(sigvals){
+    #performance
+    mse = c()
+    time = c()
+    #data
+    ns <- noisyDonoho(1000,fun=doppler,sigma=1)
+    nsTest <- noisyDonoho(1000,fun=doppler,sigma=1)
+    #plot
+    png("sigmakernsfastdon.png")
+    plot(ns)
 
-# perform cv-kfolds of each data set
+    for( sig in sigvals){ 
+        # fit KRR with RBF kernel using noisySinc toy data for each sigma in kernel
+        krr = constructKRRLearner()
+        p = list(kernel="rbfdot", sigma = sig, 
+                      lambda = .1/getN(ns), nblocks = 4)
+        time <- c(time, as.numeric(system.time(fast.m 
+                <- fast.krr$learn(ns, fast.p))[3]))
+        fast.pred <- fast.krr$predict(fast.m,nsTest)
+        mse = c(mse, sum((fast.pred-nsTest$y)^2) / getN(nsTest))
+        # add lines an different colors for each sigma
+        lines(sort(nsTest$x),fast.pred[order(nsTest$x)] , lty = 1) 
+    }
+    dev.off()
+    return(list("mse" = mse, "time"= time))
+}
+
+# Regular learner with Donoho
+plotSigmaRegDon <- function(sigvals){
+    #performance
+    mse = c()
+    time = c()
+    #data
+    ns <- noisyDonoho(1000,fun=doppler,sigma=1)
+    nsTest <- noisyDonoho(1000,fun=doppler,sigma=1)
+    #plot
+    png("sigmakernsregdon.png")
+    plot(ns)
+
+    for( sig in sigvals){ 
+        # fit KRR with RBF kernel using noisySinc toy data for each sigma in kernel
+        krr = constructKRRLearner()
+        p = list(kernel="rbfdot", sigma = sig, 
+                      lambda = .1/getN(ns))
+        time <- c(time, as.numeric(system.time(m 
+                <- krr$learn(ns, p))[3]))
+        pred <- krr$predict(m,nsTest)
+        mse = c(mse, sum((pred-nsTest$y)^2) / getN(nsTest))
+        # add lines an different colors for each sigma
+        lines(sort(nsTest$x), pred[order(nsTest$x)] , lty = 1) 
+    }
+    dev.off()
+    return(list("mse" = mse, "time"= time))
+}
+
+# K-folds CV with regular Donoho
+#CVRegDon <- function(sigvals, lambdavals){
+
+    #ns <- noisyDonoho(1000,fun=doppler,sigma=1)
+    
+
+
+
 
 # perform fast CV of each data set
 
